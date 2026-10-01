@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - YouTube Deep Linker</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #14161f;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --yt-red: #ff0033;
+      --yt-red-hover: #e6002e;
+      --green: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', 'Hind Vadodara', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+
+    /* Top Nav */
+    header {
+      background: rgba(20, 22, 31, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--yt-red);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--yt-red);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--yt-red-hover);
+    }
+
+    .btn-success {
+      background: #059669;
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1050px;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+    }
+
+    /* Login Modal Overlay */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Stat Cards Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Content Cards */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      text-align: left;
+    }
+
+    label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      color: #fff;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--yt-red);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--yt-red);
+      cursor: pointer;
+    }
+
+    /* Links Table */
+    .links-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .links-table th {
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0.75rem 0.6rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .links-table td {
+      padding: 0.9rem 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .link-row:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .thumb-cell {
+      width: 76px;
+      height: 48px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    .thumb-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .badge-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Live Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0.85rem 1.3rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      font-size: 0.9rem;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 650px) {
+      .links-table, .links-table tbody, .links-table tr, .links-table td {
+        display: block;
+        width: 100%;
+      }
+      .links-table thead {
+        display: none;
+      }
+      .link-row {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        padding: 1rem;
+      }
+      .links-table td {
+        border-bottom: none;
+        padding: 0.35rem 0;
+      }
+      .actions-cell {
+        margin-top: 0.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Admin Login Overlay -->
+  <div class="login-overlay" id="login-modal">
+    <div class="login-card">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🔐</div>
+      <h2>Admin Login</h2>
+      <p>એડમિન પેનલ ઓપન કરવા પાસવર્ડ દાખલ કરો</p>
+      
+      <form id="login-form">
+        <div class="form-group" style="margin-bottom: 1.2rem;">
+          <input type="password" id="login-password" placeholder="Password (Default: admin123)" required autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.75rem;">
+          Login કરો
+        </button>
+        <p id="login-error" style="color: #f87171; font-size: 0.82rem; margin-top: 0.8rem; display: none;"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <svg viewBox="0 0 24 24">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      <span>Deep Linker Admin Panel</span>
+    </div>
+    <div class="nav-actions">
+      <a href="/" target="_blank" class="btn btn-outline" title="Live User Page">
+        <span>👁️ Live પેજ જુઓ</span>
+      </a>
+      <button id="btn-logout" class="btn btn-outline" style="color: #f87171;">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container" id="admin-content" style="display: none;">
+
+    <!-- Stats Row -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">કુલ ક્લીક્સ (Total Clicks)</span>
+        <span class="stat-val" id="stat-total-clicks">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">કુલ લિંક્સ (Total Links)</span>
+        <span class="stat-val" id="stat-total-links">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">સક્રિય વિડીયો (Active Video)</span>
+        <span class="stat-val" style="font-size: 1.1rem; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="stat-active-title">None</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Add New Video Link -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <span>➕ નવી વિડીયો લિંક ઉમેરો (Add New Link)</span>
+      </h2>
+      <form id="add-link-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="new-url">YouTube Video / Shorts / Playlist URL *</label>
+            <input type="url" id="new-url" placeholder="e.g. https://youtu.be/dQw4w9WgXcQ or https://www.youtube.com/watch?v=..." required>
+          </div>
+          <div class="form-group">
+            <label for="new-title">વિડીયો ટાઇટલ / નામ (Optional Title)</label>
+            <input type="text" id="new-title" placeholder="e.g. નીતા નો નવો વિડીયો">
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="set-active-check" checked>
+            <label for="set-active-check" style="cursor: pointer; color: #fff;">આ લિંકને તરત જ યુઝર્સ માટે Active (સક્રિય) કરો</label>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.4rem;">
+              <span>💾 લિંક સેવ કરો (Add Link)</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Section 2: Manage Existing Links (Add, Remove, Activate) -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <span>📋 બધી લિંક્સ મેનેજ કરો (Manage Links)</span>
+      </h2>
+      
+      <div style="overflow-x: auto;">
+        <table class="links-table">
+          <thead>
+            <tr>
+              <th>થંબનેલ</th>
+              <th>ટાઈટલ અને URL</th>
+              <th>ક્લિક્સ</th>
+              <th>સ્ટેટસ</th>
+              <th>એક્શન (Action)</th>
+            </tr>
+          </thead>
+          <tbody id="links-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 3: Gujarati Text & App Settings -->
+    <div class="section-card">
+      <h2 class="section-title">
+        <span>⚙️ પેજ સેટિંગ્સ & ગુજરાતી ટેક્સ્ટ (Custom Text & Settings)</span>
+      </h2>
+      <form id="settings-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="setting-button-text">મુખ્ય લાલ બટન ટેક્સ્ટ (Gujarati Headline Text)</label>
+            <input type="text" id="setting-button-text" placeholder="નીતા નો વિડીયો જોવા અહીં લાલ બટન દબાવો" required>
+          </div>
+          <div class="form-group">
+            <label for="setting-sub-text">નાની સબટાઇટલ ટેક્સ્ટ (Subtitle Text)</label>
+            <input type="text" id="setting-sub-text" placeholder="YouTube App માં સીધું અને ઝડપી ખૂલશે 🚀">
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="setting-auto-redirect">
+            <label for="setting-auto-redirect" style="cursor: pointer; color: #fff;">
+              ઓટો-રીડાયરેક્ટ ચાલુ રાખો (પેજ ખુલતાં જ 1.5 સેકન્ડમાં YouTube ઓટોમેટિક ઓપન થશે)
+            </label>
+          </div>
+          <div class="form-group" style="max-width: 320px;">
+            <label for="setting-password">નવો એડમિન પાસવર્ડ (Change Admin Password)</label>
+            <input type="password" id="setting-password" placeholder="ખાલી રાખો જો બદલવો ન હોય તો">
+          </div>
+          <div>
+            <button type="submit" class="btn btn-success" style="padding: 0.75rem 1.4rem;">
+              <span>💾 સેટિંગ્સ સેવ કરો (Save Settings)</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast-msg">Action performed!</div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      let adminPassword = sessionStorage.getItem('admin_pwd') || '';
+      
+      const loginModal = document.getElementById('login-modal');
+      const loginForm = document.getElementById('login-form');
+      const loginPasswordInput = document.getElementById('login-password');
+      const loginError = document.getElementById('login-error');
+      const adminContent = document.getElementById('admin-content');
+      const btnLogout = document.getElementById('btn-logout');
+
+      const statTotalClicks = document.getElementById('stat-total-clicks');
+      const statTotalLinks = document.getElementById('stat-total-links');
+      const statActiveTitle = document.getElementById('stat-active-title');
+
+      const addLinkForm = document.getElementById('add-link-form');
+      const linksTbody = document.getElementById('links-tbody');
+      const settingsForm = document.getElementById('settings-form');
+      const settingButtonText = document.getElementById('setting-button-text');
+      const settingSubText = document.getElementById('setting-sub-text');
+      const settingAutoRedirect = document.getElementById('setting-auto-redirect');
+      const settingPassword = document.getElementById('setting-password');
+
+      function showToast(msg) {
+        const toast = document.getElementById('toast-msg');
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(function() { toast.style.display = 'none'; }, 3000);
+      }
+
+      // Check stored password on load
+      if (adminPassword) {
+        loadDashboard();
+      }
+
+      // Handle Login
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const pwd = loginPasswordInput.value.trim();
+        if (!pwd) return;
+
+        fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            adminPassword = pwd;
+            sessionStorage.setItem('admin_pwd', pwd);
+            loginModal.style.display = 'none';
+            adminContent.style.display = 'block';
+            loadDashboard();
+          } else {
+            loginError.textContent = data.message || 'ખોટો પાસવર્ડ!';
+            loginError.style.display = 'block';
+          }
+        })
+        .catch(function() {
+          loginError.textContent = 'સર્વર કનેક્શન એરર!';
+          loginError.style.display = 'block';
+        });
+      });
+
+      // Handle Logout
+      btnLogout.addEventListener('click', function() {
+        sessionStorage.removeItem('admin_pwd');
+        adminPassword = '';
+        window.location.reload();
+      });
+
+      // Load Dashboard Data
+      function loadDashboard() {
+        fetch('/api/admin/data', {
+          headers: { 'x-admin-password': adminPassword }
+        })
+        .then(function(res) {
+          if (res.status === 401) {
+            sessionStorage.removeItem('admin_pwd');
+            adminPassword = '';
+            loginModal.style.display = 'flex';
+            adminContent.style.display = 'none';
+            throw new Error('Unauthorized');
+          }
+          return res.json();
+        })
+        .then(function(data) {
+          if (!data || !data.success) return;
+
+          loginModal.style.display = 'none';
+          adminContent.style.display = 'block';
+
+          // Update Stats
+          statTotalClicks.textContent = data.totalClicks || 0;
+          statTotalLinks.textContent = (data.links && data.links.length) || 0;
+
+          const activeLink = data.links.find(function(l) { return l.id === data.activeLinkId; });
+          statActiveTitle.textContent = activeLink ? activeLink.title : 'કોઈ સક્રિય લિંક નથી';
+
+          // Update Settings Inputs
+          settingButtonText.value = data.settings.buttonText || '';
+          settingSubText.value = data.settings.subText || '';
+          settingAutoRedirect.checked = Boolean(data.settings.autoRedirect);
+
+          // Render Links Table
+          renderLinksTable(data.links, data.activeLinkId);
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+      }
+
+      // Render Links Table
+      function renderLinksTable(links, activeLinkId) {
+        linksTbody.innerHTML = '';
+
+        if (!links || links.length === 0) {
+          linksTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: #94a3b8;">હજુ સુધી કોઈ લિંક ઉમેરાયેલ નથી. ઉપરથી નવી લિંક ઉમેરો.</td></tr>';
+          return;
+        }
+
+        links.forEach(function(link) {
+          const isActive = link.id === activeLinkId;
+          const tr = document.createElement('tr');
+          tr.className = 'link-row';
+
+          const thumbSrc = link.thumbnailUrl || ('https://img.youtube.com/vi/' + (link.videoId || '') + '/hqdefault.jpg');
+
+          tr.innerHTML = `
+            <td>
+              <div class="thumb-cell">
+                <img src="${thumbSrc}" alt="thumb">
+              </div>
+            </td>
+            <td>
+              <strong style="color: #fff; font-size: 0.95rem;">${escapeHtml(link.title)}</strong>
+              <div style="font-size: 0.78rem; color: #94a3b8; word-break: break-all; margin-top: 2px;">
+                <a href="${escapeHtml(link.originalUrl)}" target="_blank" style="color: #38bdf8; text-decoration: none;">${escapeHtml(link.originalUrl)}</a>
+              </div>
+            </td>
+            <td>
+              <strong style="font-size: 1.1rem; color: #f8fafc;">${link.clicks || 0}</strong>
+            </td>
+            <td>
+              ${isActive ? '<span class="badge-active">● Active (સક્રિય)</span>' : '<span style="color:#64748b; font-size:0.75rem;">Inactive</span>'}
+            </td>
+            <td>
+              <div class="actions-cell">
+                ${!isActive ? `<button class="btn btn-success btn-set-active" data-id="${link.id}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Active કરો</button>` : ''}
+                <button class="btn btn-outline btn-copy-link" data-url="${window.location.origin}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Copy Link</button>
+                <button class="btn btn-danger btn-delete-link" data-id="${link.id}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Remove 🗑️</button>
+              </div>
+            </td>
+          `;
+
+          linksTbody.appendChild(tr);
+        });
+
+        // Attach action events
+        document.querySelectorAll('.btn-set-active').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            setActiveLink(id);
+          });
+        });
+
+        document.querySelectorAll('.btn-delete-link').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            if (confirm('શું તમે ખરેખર આ લિંક કાઢી નાખવા માંગો છો?')) {
+              deleteLink(id);
+            }
+          });
+        });
+
+        document.querySelectorAll('.btn-copy-link').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const url = window.location.origin;
+            navigator.clipboard.writeText(url).then(function() {
+              showToast('લિંક કોપી થઈ ગઈ! શૅર કરવા તૈયાર.');
+            });
+          });
+        });
+      }
+
+      // Set Link as Active
+      function setActiveLink(id) {
+        fetch('/api/admin/links/' + id + '/active', {
+          method: 'POST',
+          headers: { 'x-admin-password': adminPassword }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showToast('આ લિંક હવે Active થઈ ગઈ છે!');
+            loadDashboard();
+          }
+        });
+      }
+
+      // Delete Link
+      function deleteLink(id) {
+        fetch('/api/admin/links/' + id, {
+          method: 'DELETE',
+          headers: { 'x-admin-password': adminPassword }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showToast('લિંક સફળતાપૂર્વક કાઢી નાખવામાં આવી!');
+            loadDashboard();
+          } else {
+            alert(data.message || 'Error deleting link');
+          }
+        });
+      }
+
+      // Add New Link Submit
+      addLinkForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const url = document.getElementById('new-url').value.trim();
+        const title = document.getElementById('new-title').value.trim();
+        const setActive = document.getElementById('set-active-check').checked;
+
+        if (!url) return;
+
+        fetch('/api/admin/links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ url: url, title: title, setAsActive: setActive })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showToast('નવી લિંક ઉમેરાઈ ગઈ!');
+            document.getElementById('new-url').value = '';
+            document.getElementById('new-title').value = '';
+            loadDashboard();
+          } else {
+            alert(data.message || 'લિંક ઉમેરવામાં ભૂલ આવી!');
+          }
+        })
+        .catch(function() {
+          alert('સર્વર એરર!');
+        });
+      });
+
+      // Save Settings Submit
+      settingsForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const buttonText = settingButtonText.value.trim();
+        const subText = settingSubText.value.trim();
+        const autoRedirect = settingAutoRedirect.checked;
+        const newPassword = settingPassword.value.trim();
+
+        fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({
+            buttonText: buttonText,
+            subText: subText,
+            autoRedirect: autoRedirect,
+            newPassword: newPassword || undefined
+          })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showToast(data.message || 'સેટિંગ્સ સેવ થઈ ગયા!');
+            if (newPassword) {
+              adminPassword = newPassword;
+              sessionStorage.setItem('admin_pwd', newPassword);
+              settingPassword.value = '';
+            }
+            loadDashboard();
+          } else {
+            alert(data.message || 'સેવ કરવામાં ભૂલ!');
+          }
+        });
+      });
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+    })();
+  </script>
+</body>
+</html>

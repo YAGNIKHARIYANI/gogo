@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <title>Opening YouTube...</title>
+  
+  <!-- SEO & OpenGraph Meta Tags for Social Previews (Facebook, WhatsApp, LinkedIn, iMessage) -->
+  <meta name="title" content="Watch on YouTube">
+  <meta name="description" content="Click to open this video directly in the YouTube App with zero friction.">
+  <meta property="og:type" content="video.other">
+  <meta property="og:site_name" content="Smart YouTube Deep Linker">
+  <meta property="og:title" id="og-title" content="Watch on YouTube">
+  <meta property="og:description" id="og-desc" content="Direct high-performance YouTube App redirect.">
+  <meta property="og:image" id="og-image" content="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="tw-title" content="Watch on YouTube">
+  <meta name="twitter:description" id="tw-desc" content="Direct YouTube App deep linker.">
+  <meta name="twitter:image" id="tw-image" content="https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg">
+  
+  <!-- Theme Color for Mobile Browsers -->
+  <meta name="theme-color" content="#0a0a0c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    :root {
+      --bg-dark: #09090b;
+      --card-bg: rgba(22, 22, 27, 0.85);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --yt-red: #ff0033;
+      --yt-red-glow: rgba(255, 0, 51, 0.45);
+      --yt-red-hover: #e6002e;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-sub: #71717a;
+      --accent-gradient: linear-gradient(135deg, #ff0033 0%, #ff4b2b 100%);
+      --surface-glass: rgba(255, 255, 255, 0.05);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Glowing Background Blobs */
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, var(--yt-red-glow) 0%, transparent 70%);
+      filter: blur(80px);
+      opacity: 0.35;
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.25; }
+      100% { transform: translate(-50%, -50%) scale(1.15); opacity: 0.45; }
+    }
+
+    /* Background blurred video thumbnail backdrop */
+    .backdrop-image {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      filter: blur(55px) brightness(0.22);
+      transform: scale(1.2);
+      z-index: 0;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    /* Main Container Card */
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 440px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 2rem 1.75rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
+                  0 0 0 1px rgba(255, 255, 255, 0.05);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Brand Header */
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-glass);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .brand-badge svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--yt-red);
+    }
+
+    /* Thumbnail Box with Pulsing Play Icon */
+    .media-preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: #18181b;
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .media-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+
+    .media-preview:hover img {
+      transform: scale(1.03);
+    }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+    }
+
+    .play-button-pulsar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--yt-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px var(--yt-red-glow);
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .play-button-pulsar::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid var(--yt-red);
+      opacity: 0.8;
+      animation: pulseRipple 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+
+    @keyframes pulseRipple {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+
+    .play-button-pulsar:hover {
+      transform: scale(1.08);
+    }
+
+    .play-button-pulsar svg {
+      width: 24px;
+      height: 24px;
+      fill: #ffffff;
+      margin-left: 3px;
+    }
+
+    /* Dynamic Title & Status Area */
+    .info-container {
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+
+    .video-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Modern Circular Spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--yt-red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Progress bar for auto-redirection countdown */
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      margin: 1rem 0 1.5rem 0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent-gradient);
+      transform-origin: left;
+      transform: scaleX(1);
+      transition: transform 1.5s linear;
+    }
+
+    /* Action Buttons */
+    .actions-stack {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.95rem 1.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+      outline: none;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 20px var(--yt-red-glow);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--yt-red-hover) 0%, #e03e1e 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(255, 0, 51, 0.55);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-glass);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* In-App Browser (Instagram/TikTok/Facebook) Detection Notice */
+    .iab-notice {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 0.85rem;
+      background: rgba(255, 170, 0, 0.08);
+      border: 1px solid rgba(255, 170, 0, 0.25);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #fbd38d;
+      text-align: left;
+    }
+
+    .iab-notice strong {
+      color: #feebc8;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    /* Link Generator / Tester Section (Visible when no param is provided) */
+    .generator-panel {
+      display: none;
+      width: 100%;
+      margin-top: 1rem;
+      text-align: left;
+    }
+
+    .generator-panel h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.4rem;
+    }
+
+    .generator-panel p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.9rem;
+      color: #fff;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--yt-red);
+      box-shadow: 0 0 0 2px rgba(255, 0, 51, 0.2);
+    }
+
+    .sample-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .sample-chip {
+      background: var(--surface-glass);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .sample-chip:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    /* Footer Metadata */
+    .footer-meta {
+      margin-top: 1.5rem;
+      font-size: 0.72rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-meta span.dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-sub);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.5rem 1.25rem;
+        border-radius: 16px;
+      }
+      .video-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow & Backdrop -->
+  <div class="ambient-glow" id="ambient-glow"></div>
+  <div class="backdrop-image" id="backdrop-image"></div>
+
+  <!-- Deep Linker Card -->
+  <main class="card" role="main">
+    
+    <!-- Top Badge -->
+    <div class="brand-badge">
+      <svg viewBox="0 0 24 24">
+        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      </svg>
+      <span>Smart App Linker</span>
+    </div>
+
+    <!-- Video Preview Media Block -->
+    <div class="media-preview" id="media-preview">
+      <img id="video-thumbnail" src="https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg" alt="Video Preview" loading="eager">
+      <div class="play-overlay" id="play-trigger">
+        <div class="play-button-pulsar" title="Tap to Open">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title & Status Details -->
+    <div class="info-container">
+      <h1 class="video-title" id="display-title">Opening YouTube Video...</h1>
+      <div class="status-badge" id="status-badge">
+        <div class="spinner" id="status-spinner"></div>
+        <span id="status-text">Detecting app & launching...</span>
+      </div>
+    </div>
+
+    <!-- Countdown Progress Bar -->
+    <div class="progress-container" id="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <!-- Action Buttons Stack -->
+    <div class="actions-stack">
+      <a id="btn-open-app" href="#" class="btn btn-primary" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span>Open in YouTube App</span>
+      </a>
+
+      <a id="btn-fallback-web" href="#" class="btn btn-secondary" rel="noopener">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Continue in Web Browser</span>
+      </a>
+    </div>
+
+    <!-- In-App Browser (Instagram/TikTok/FB) Helper Banner -->
+    <div class="iab-notice" id="iab-notice">
+      <strong>Notice for In-App Browsers:</strong>
+      If the YouTube app doesn't open automatically, tap the <strong>•••</strong> menu at the top-right and choose <strong>"Open in External Browser"</strong> or <strong>"Open in Chrome/Safari"</strong>.
+    </div>
+
+    <!-- Generator & Link Tester Panel (shows when no ?v= or ?url= is passed) -->
+    <div class="generator-panel" id="generator-panel">
+      <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 1.5rem 0 1rem 0;">
+      <h3>Create a Smart Link</h3>
+      <p>Paste any YouTube video, shorts, or playlist URL to test deep linking or generate an instant sharing link:</p>
+      
+      <div class="input-group">
+        <input type="text" id="custom-url-input" class="input-field" placeholder="Paste YouTube link (e.g. youtu.be/... or watch?v=...)">
+        <button id="btn-generate-link" class="btn btn-primary" style="padding: 0.75rem;">
+          Test & Generate Link
+        </button>
+      </div>
+
+      <div class="sample-tags">
+        <span class="sample-chip" data-sample="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Rick Astley</span>
+        <span class="sample-chip" data-sample="https://youtu.be/kJQP7kiw5Fk">Despacito</span>
+        <span class="sample-chip" data-sample="https://www.youtube.com/shorts/5e_o39g4jE8">Shorts Demo</span>
+        <span class="sample-chip" data-sample="https://www.youtube.com/playlist?list=PLlaN88a7y2_plecYoJxeVJSSy41LUcBst">Lo-Fi Playlist</span>
+      </div>
+    </div>
+
+    <!-- Footer Meta -->
+    <div class="footer-meta">
+      <span id="detected-os">Detecting OS...</span>
+      <span class="dot"></span>
+      <span id="detected-env">Browser</span>
+      <span class="dot"></span>
+      <span>Ultra-Fast Direct</span>
+    </div>
+
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // -------------------------------------------------------------
+      // 1. Device, OS & In-App Browser Detection
+      // -------------------------------------------------------------
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+      const isAndroid = /Android/i.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isMobile = isAndroid || isIOS;
+
+      // In-App Browser (IAB) detection: Instagram, Facebook, Messenger, TikTok, Twitter/X, Snapchat, WeChat
+      const isInAppBrowser = (function() {
+        const iabRegex = /FBAN|FBAV|Instagram|musical_ly|ByteLocale|TikTok|Twitter|Snapchat|MicroMessenger|Line|GSA/i;
+        return iabRegex.test(ua);
+      })();
+
+      // -------------------------------------------------------------
+      // 2. YouTube URL Extraction & Normalization
+      // -------------------------------------------------------------
+      function extractYouTubeDetails() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Priority 1: Check for explicit parameters
+        let videoId = urlParams.get('v');
+        let playlistId = urlParams.get('list');
+        let rawUrl = urlParams.get('url') || urlParams.get('link');
+        let timeParam = urlParams.get('t') || urlParams.get('start') || '';
+
+        // If no explicit v/list, parse rawUrl or full search string
+        const targetString = rawUrl || window.location.search;
+
+        if (!videoId) {
+          // Match standard YouTube URLs (youtu.be, youtube.com/watch?v=, shorts, embed)
+          const videoMatch = targetString.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/i);
+          if (videoMatch && videoMatch[1]) {
+            videoId = videoMatch[1];
+          }
+        }
+
+        if (!playlistId) {
+          const playlistMatch = targetString.match(/[?&]list=([\w-]+)/i);
+          if (playlistMatch && playlistMatch[1]) {
+            playlistId = playlistMatch[1];
+          }
+        }
+
+        if (!timeParam) {
+          const timeMatch = targetString.match(/[?&](?:t|start)=([0-9a-zA-Z]+)/i);
+          if (timeMatch && timeMatch[1]) {
+            timeParam = timeMatch[1];
+          }
+        }
+
+        // Detect if it's a Shorts URL
+        const isShorts = /shorts\/([\w-]{11})/i.test(targetString);
+
+        return {
+          videoId: videoId || null,
+          playlistId: playlistId || null,
+          timeParam: timeParam || null,
+          isShorts: isShorts,
+          hasParams: Boolean(videoId || playlistId || rawUrl)
+        };
+      }
+
+      // -------------------------------------------------------------
+      // 3. Scheme & Intent URL Construction
+      // -------------------------------------------------------------
+      function buildRedirectUrls(details) {
+        const { videoId, playlistId, timeParam, isShorts } = details;
+
+        // Build canonical fallback Web URL
+        let webUrl = 'https://www.youtube.com/';
+        let queryParams = [];
+
+        if (playlistId && !videoId) {
+          webUrl += `playlist?list=${playlistId}`;
+        } else if (videoId) {
+          if (isShorts) {
+            webUrl += `shorts/${videoId}`;
+          } else {
+            webUrl += `watch?v=${videoId}`;
+            if (playlistId) queryParams.push(`list=${playlistId}`);
+            if (timeParam) queryParams.push(`t=${timeParam}`);
+            if (queryParams.length > 0) {
+              webUrl += '&' + queryParams.join('&');
+            }
+          }
+        } else {
+          webUrl = 'https://www.youtube.com/';
+        }
+
+        // Build Android Intent Scheme URL
+        // Intent scheme structure: intent://www.youtube.com/watch?v=ID#Intent;package=com.google.android.youtube;scheme=https;end
+        let androidIntentUrl = '';
+        let androidVndUrl = '';
+
+        if (videoId) {
+          const path = isShorts ? `shorts/${videoId}` : `watch?v=${videoId}${timeParam ? `&t=${timeParam}` : ''}${playlistId ? `&list=${playlistId}` : ''}`;
+          androidIntentUrl = `intent://www.youtube.com/${path}#Intent;package=com.google.android.youtube;scheme=https;end`;
+          androidVndUrl = `vnd.youtube:${videoId}`;
+        } else if (playlistId) {
+          androidIntentUrl = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;end`;
+          androidVndUrl = `vnd.youtube://www.youtube.com/playlist?list=${playlistId}`;
+        } else {
+          androidIntentUrl = `intent://www.youtube.com/#Intent;package=com.google.android.youtube;scheme=https;end`;
+          androidVndUrl = `vnd.youtube://`;
+        }
+
+        // Build iOS Custom URI Scheme URL
+        // iOS YouTube App handles both youtube:// and vnd.youtube://
+        let iosSchemeUrl = '';
+        if (videoId) {
+          if (isShorts) {
+            iosSchemeUrl = `youtube://www.youtube.com/shorts/${videoId}`;
+          } else {
+            iosSchemeUrl = `youtube://watch?v=${videoId}`;
+          }
+        } else if (playlistId) {
+          iosSchemeUrl = `youtube://www.youtube.com/playlist?list=${playlistId}`;
+        } else {
+          iosSchemeUrl = `youtube://`;
+        }
+
+        return {
+          webUrl,
+          androidIntentUrl,
+          androidVndUrl,
+          iosSchemeUrl
+        };
+      }
+
+      // -------------------------------------------------------------
+      // 4. UI Rendering & Feedback
+      // -------------------------------------------------------------
+      const displayTitle = document.getElementById('display-title');
+      const statusText = document.getElementById('status-text');
+      const statusBadge = document.getElementById('status-badge');
+      const statusSpinner = document.getElementById('status-spinner');
+      const videoThumb = document.getElementById('video-thumbnail');
+      const backdropImage = document.getElementById('backdrop-image');
+      const btnOpenApp = document.getElementById('btn-open-app');
+      const btnFallbackWeb = document.getElementById('btn-fallback-web');
+      const progressBar = document.getElementById('progress-bar');
+      const iabNotice = document.getElementById('iab-notice');
+      const detectedOsLabel = document.getElementById('detected-os');
+      const detectedEnvLabel = document.getElementById('detected-env');
+      const generatorPanel = document.getElementById('generator-panel');
+      const playTrigger = document.getElementById('play-trigger');
+
+      // Update Detected Environment UI
+      if (isAndroid) {
+        detectedOsLabel.textContent = 'Android Device';
+      } else if (isIOS) {
+        detectedOsLabel.textContent = 'iOS Device';
+      } else {
+        detectedOsLabel.textContent = 'Desktop PC';
+      }
+
+      if (isInAppBrowser) {
+        detectedEnvLabel.textContent = 'In-App Webview';
+        iabNotice.style.display = 'block';
+      } else {
+        detectedEnvLabel.textContent = 'Standard Browser';
+      }
+
+      const ytDetails = extractYouTubeDetails();
+      const redirectUrls = buildRedirectUrls(ytDetails);
+
+      // Setup Fallback & Direct Links on Buttons
+      btnFallbackWeb.href = redirectUrls.webUrl;
+
+      if (isAndroid) {
+        btnOpenApp.href = redirectUrls.androidIntentUrl;
+      } else if (isIOS) {
+        btnOpenApp.href = redirectUrls.iosSchemeUrl;
+      } else {
+        btnOpenApp.href = redirectUrls.webUrl;
+        btnOpenApp.querySelector('span').textContent = 'Open in YouTube';
+      }
+
+      // If video ID is available, update media preview & titles
+      if (ytDetails.videoId) {
+        const thumbUrl = `https://img.youtube.com/vi/${ytDetails.videoId}/hqdefault.jpg`;
+        const highResThumb = `https://img.youtube.com/vi/${ytDetails.videoId}/maxresdefault.jpg`;
+
+        videoThumb.src = thumbUrl;
+        
+        // Try upgrading to maxres if available
+        const imgTest = new Image();
+        imgTest.src = highResThumb;
+        imgTest.onload = function() {
+          if (imgTest.naturalWidth > 120) {
+            videoThumb.src = highResThumb;
+            backdropImage.style.backgroundImage = `url('${highResThumb}')`;
+            backdropImage.style.opacity = '0.4';
+          }
+        };
+
+        backdropImage.style.backgroundImage = `url('${thumbUrl}')`;
+        backdropImage.style.opacity = '0.35';
+
+        displayTitle.textContent = ytDetails.isShorts ? 'Opening YouTube Short...' : 'Opening Video in YouTube...';
+        
+        // Optionally fetch oEmbed title for high-end polish without API key
+        fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${ytDetails.videoId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.title) {
+              displayTitle.textContent = data.title;
+              document.title = `${data.title} - Opening YouTube...`;
+              const ogTitle = document.getElementById('og-title');
+              if (ogTitle) ogTitle.content = data.title;
+            }
+          })
+          .catch(() => {});
+      } else if (ytDetails.playlistId) {
+        displayTitle.textContent = 'Opening YouTube Playlist...';
+      } else {
+        // No parameters provided: show link builder/tester UI
+        displayTitle.textContent = 'YouTube Smart Deep Linker';
+        statusText.textContent = 'Paste a URL below to test or generate';
+        statusSpinner.style.display = 'none';
+        progressBar.style.display = 'none';
+        generatorPanel.style.display = 'block';
+      }
+
+      // -------------------------------------------------------------
+      // 5. High-Performance Smart Redirect Execution
+      // -------------------------------------------------------------
+      let hasUserNavigatedAway = false;
+      let redirectTimeout = null;
+
+      // Listen for window hide / visibilitychange to prevent fallback if app opened
+      function handleVisibilityChange() {
+        if (document.hidden || document.webkitHidden) {
+          hasUserNavigatedAway = true;
+          if (redirectTimeout) clearTimeout(redirectTimeout);
+        }
+      }
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('pagehide', handleVisibilityChange);
+
+      function executeDeepLink() {
+        if (!ytDetails.hasParams) return; // In demo/creator mode
+
+        statusText.textContent = 'Opening in YouTube App...';
+        
+        // Animate progress bar across 1.5 seconds
+        progressBar.style.transform = 'scaleX(0)';
+
+        const startTime = Date.now();
+
+        if (isAndroid) {
+          // Android Intent: Native intent kicks off directly without popup in Chrome/Webview
+          window.location.href = redirectUrls.androidIntentUrl;
+
+          // Set 1.5s fallback to web if YouTube app is not installed or blocked
+          redirectTimeout = setTimeout(function () {
+            if (!hasUserNavigatedAway && Date.now() - startTime >= 1400) {
+              statusText.textContent = 'Redirecting to Web Browser...';
+              window.location.href = redirectUrls.webUrl;
+            }
+          }, 1500);
+
+        } else if (isIOS) {
+          // iOS: Trigger custom URL Scheme
+          // Try custom scheme first
+          window.location.href = redirectUrls.iosSchemeUrl;
+
+          // Fallback to web URL after 1.5s if app didn't capture focus
+          redirectTimeout = setTimeout(function () {
+            if (!hasUserNavigatedAway && Date.now() - startTime >= 1400) {
+              statusText.textContent = 'Redirecting to Web Browser...';
+              window.location.href = redirectUrls.webUrl;
+            }
+          }, 1500);
+
+        } else {
+          // Desktop / Non-mobile:
+          statusText.textContent = 'Redirecting to YouTube...';
+          redirectTimeout = setTimeout(function () {
+            window.location.href = redirectUrls.webUrl;
+          }, 1000);
+        }
+      }
+
+      // Allow clicking the big play button or media preview to re-trigger
+      playTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (isAndroid) {
+          window.location.href = redirectUrls.androidIntentUrl;
+        } else if (isIOS) {
+          window.location.href = redirectUrls.iosSchemeUrl;
+        } else {
+          window.location.href = redirectUrls.webUrl;
+        }
+      });
+
+      // Auto-trigger on page load if video/URL parameters are present
+      if (ytDetails.hasParams) {
+        // Slight 80ms delay to ensure browser DOM is fully rendered and ready
+        setTimeout(executeDeepLink, 80);
+      }
+
+      // -------------------------------------------------------------
+      // 6. Generator / Tester Interactive Handlers
+      // -------------------------------------------------------------
+      const customUrlInput = document.getElementById('custom-url-input');
+      const btnGenerate = document.getElementById('btn-generate-link');
+
+      function handleTestLink(rawInput) {
+        if (!rawInput.trim()) return;
+        const currentOrigin = window.location.origin + window.location.pathname;
+        const testLink = `${currentOrigin}?url=${encodeURIComponent(rawInput.trim())}`;
+        window.location.href = testLink;
+      }
+
+      if (btnGenerate && customUrlInput) {
+        btnGenerate.addEventListener('click', function () {
+          handleTestLink(customUrlInput.value);
+        });
+
+        customUrlInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            handleTestLink(customUrlInput.value);
+          }
+        });
+
+        document.querySelectorAll('.sample-chip').forEach(function (chip) {
+          chip.addEventListener('click', function () {
+            const sampleUrl = this.getAttribute('data-sample');
+            customUrlInput.value = sampleUrl;
+            handleTestLink(sampleUrl);
+          });
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>

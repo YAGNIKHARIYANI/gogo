@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <title>નીતા નો વિડીયો જોવા અહીં લાલ બટન દબાવો</title>
+  
+  <!-- SEO & Social OpenGraph Previews -->
+  <meta name="title" content="નીતા નો વિડીયો જોવા અહીં લાલ બટન દબાવો">
+  <meta name="description" content="નીચે આપેલ લાલ બટન દબાવીને સીધા YouTube એપમાં વિડીયો જુઓ!">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="નીતા નો વિડીયો જોવા અહીં લાલ બટન દબાવો">
+  
+  <!-- Theme Color for Mobile Browsers -->
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --yt-red: #ff0000;
+      --yt-red-dark: #cc0000;
+      --yt-red-glow: rgba(255, 0, 0, 0.7);
+      --bg-dark: #0a0a0f;
+      --text-white: #ffffff;
+      --radius-xl: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 35%, rgba(255, 0, 51, 0.22) 0%, transparent 60%),
+        radial-gradient(circle at 50% 85%, rgba(255, 0, 51, 0.12) 0%, transparent 65%);
+      color: var(--text-white);
+      font-family: 'Hind Vadodara', 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem 1.25rem;
+      position: relative;
+    }
+
+    /* Ambient Pulsing Glow Filling the Screen */
+    .ambient-glow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--yt-red-glow) 0%, transparent 68%);
+      filter: blur(110px);
+      opacity: 0.28;
+      z-index: 0;
+      pointer-events: none;
+      animation: pulseGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.22; }
+      100% { transform: translate(-50%, -50%) scale(1.18); opacity: 0.38; }
+    }
+
+    /* Clean Center Content (No Card, No Box, Full Screen Flow) */
+    .hero-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Big Gujarati Headline */
+    .gujarati-title {
+      font-size: clamp(1.8rem, 6.5vw, 2.75rem);
+      font-weight: 800;
+      line-height: 1.35;
+      color: #ffffff;
+      margin-bottom: 2.2rem;
+      text-shadow: 0 4px 25px rgba(0, 0, 0, 0.95),
+                   0 0 50px rgba(255, 0, 51, 0.35);
+      word-break: break-word;
+      padding: 0 0.5rem;
+    }
+
+    /* Animated Bouncing Finger Pointer (👇) */
+    .finger-guide-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1.4rem;
+      position: relative;
+    }
+
+    .finger-icon {
+      font-size: clamp(3.6rem, 12vw, 5rem);
+      filter: drop-shadow(0 10px 24px rgba(255, 0, 0, 0.65));
+      animation: bounceFinger 1s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+      user-select: none;
+    }
+
+    @keyframes bounceFinger {
+      0%, 100% {
+        transform: translateY(0px) scale(1);
+      }
+      50% {
+        transform: translateY(18px) scale(1.22);
+      }
+    }
+
+    .tap-hint-text {
+      font-size: clamp(0.9rem, 3vw, 1.05rem);
+      font-weight: 800;
+      color: #ff3344;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+      text-shadow: 0 0 16px rgba(255, 0, 51, 0.6);
+    }
+
+    /* THE BIG FULL-WIDTH GLOWING RED BUTTON (લાલ બટન) */
+    .btn-red-pulse-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin: 0.6rem 0 0 0;
+    }
+
+    .btn-red-cta {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1.45rem 1.8rem;
+      background: linear-gradient(135deg, #ff0000 0%, #e60026 55%, #b3001b 100%);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: clamp(1.28rem, 4.2vw, 1.6rem);
+      font-weight: 800;
+      text-decoration: none;
+      border: 2.5px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-xl);
+      cursor: pointer;
+      box-shadow: 0 16px 40px var(--yt-red-glow),
+                  0 6px 16px rgba(0, 0, 0, 0.8),
+                  inset 0 1px 2px rgba(255, 255, 255, 0.6);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      user-select: none;
+    }
+
+    .btn-red-cta:active {
+      transform: scale(0.96);
+      box-shadow: 0 6px 20px var(--yt-red-glow);
+    }
+
+    .btn-red-cta svg {
+      width: 36px;
+      height: 36px;
+      fill: #ffffff;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+    }
+
+    /* Pulsing Outer Rings for Red Button */
+    .pulse-ring {
+      position: absolute;
+      inset: -7px;
+      border-radius: calc(var(--radius-xl) + 7px);
+      border: 4px solid rgba(255, 0, 0, 0.85);
+      animation: buttonPulse 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes buttonPulse {
+      0% {
+        transform: scale(0.98);
+        opacity: 0.95;
+      }
+      100% {
+        transform: scale(1.09, 1.25);
+        opacity: 0;
+      }
+    }
+
+    /* Small opening spinner shown ONLY when clicked */
+    .loading-toast {
+      position: fixed;
+      bottom: 2rem;
+      background: rgba(20, 20, 26, 0.95);
+      border: 1px solid rgba(255, 0, 51, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 0.75rem 1.3rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      z-index: 50;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #ff0000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Pulsing Glow Backdrop -->
+  <div class="ambient-glow"></div>
+
+  <!-- Main Hero Viewport Container -->
+  <main class="hero-container">
+    
+    <!-- Big Gujarati Headline -->
+    <h1 class="gujarati-title" id="main-gujarati-title">
+      નીતા નો વિડીયો જોવા અહીં લાલ બટન દબાવો
+    </h1>
+
+    <!-- Animated Bouncing Finger Pointer pointing directly at the Red Button -->
+    <div class="finger-guide-container">
+      <div class="finger-icon" aria-hidden="true">👇</div>
+      <div class="tap-hint-text">અહીં દબાવો (TAP HERE)</div>
+    </div>
+
+    <!-- THE BIG RED BUTTON (લાલ બટન) -->
+    <div class="btn-red-pulse-container">
+      <div class="pulse-ring"></div>
+      <a id="btn-red-main" href="#" class="btn-red-cta" rel="noopener">
+        <svg viewBox="0 0 24 24">
+          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span id="button-label">લાલ બટન દબાવો (OPEN)</span>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- Small Toast when button is clicked -->
+  <div class="loading-toast" id="loading-toast">
+    <div class="spinner"></div>
+    <span>YouTube App ખૂલી રહ્યું છે...</span>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      const mainTitle = document.getElementById('main-gujarati-title');
+      const btnRedMain = document.getElementById('btn-red-main');
+      const loadingToast = document.getElementById('loading-toast');
+
+      // Device & Browser Detection
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isAndroid = /Android/i.test(ua);
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      let activeConfig = null;
+
+      // Track Click
+      function recordClick(linkId) {
+        try {
+          fetch('/api/click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ linkId: linkId }),
+            keepalive: true
+          }).catch(function() {});
+        } catch(e) {}
+      }
+
+      // Deep Link Execution (Triggered only on user tap)
+      function triggerDeepLink() {
+        if (!activeConfig || !activeConfig.activeLink) return;
+
+        const deepLinks = activeConfig.activeLink.deepLinks;
+        if (!deepLinks) return;
+
+        // Mobile haptic vibration feedback
+        if (navigator.vibrate) {
+          try { navigator.vibrate(50); } catch(e) {}
+        }
+
+        // Show toast
+        if (loadingToast) {
+          loadingToast.style.display = 'inline-flex';
+        }
+
+        recordClick(activeConfig.activeLink.id);
+        
+        let targetAppUrl = deepLinks.webUrl;
+        if (isAndroid) {
+          targetAppUrl = deepLinks.androidIntent;
+        } else if (isIOS) {
+          targetAppUrl = deepLinks.iosScheme;
+        }
+
+        // Launch App URL
+        if (isAndroid || isIOS) {
+          window.location.href = targetAppUrl;
+
+          // 1.5s Fallback: If user stays on page, open web version
+          setTimeout(function() {
+            if (!document.hidden) {
+              window.location.href = deepLinks.webUrl;
+            }
+          }, 1600);
+        } else {
+          // On Desktop PC
+          window.location.href = deepLinks.webUrl;
+        }
+      }
+
+      // Load App Configuration & Active Link from Server
+      fetch('/api/config')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (!data || !data.success || !data.activeLink) return;
+
+          activeConfig = data;
+
+          if (data.settings && data.settings.buttonText) {
+            mainTitle.textContent = data.settings.buttonText;
+            document.title = data.settings.buttonText;
+          }
+
+          // Set primary button link based on OS
+          if (isAndroid) {
+            btnRedMain.href = data.activeLink.deepLinks.androidIntent;
+          } else if (isIOS) {
+            btnRedMain.href = data.activeLink.deepLinks.iosScheme;
+          } else {
+            btnRedMain.href = data.activeLink.deepLinks.webUrl;
+          }
+        })
+        .catch(function(err) {
+          console.error(err);
+        });
+
+      // User tap on Big Red Button
+      btnRedMain.addEventListener('click', function(e) {
+        e.preventDefault();
+        triggerDeepLink();
+      });
+
+    })();
+  </script>
+</body>
+</html>
