@@ -401,6 +401,39 @@
     </div>
   </div>
 
+  <!-- Edit Link Modal Overlay -->
+  <div class="login-overlay" id="edit-modal" style="display: none;">
+    <div class="login-card" style="max-width: 440px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+        <h2 style="font-size: 1.25rem;">✏️ વિડીયો લિંક Edit કરો</h2>
+        <button id="btn-close-edit" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">✕</button>
+      </div>
+      <form id="edit-link-form">
+        <input type="hidden" id="edit-link-id">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-link-title">વિડીયો ટાઇટલ</label>
+          <input type="text" id="edit-link-title" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label for="edit-link-url">YouTube URL</label>
+          <input type="url" id="edit-link-url" required>
+        </div>
+        <div class="checkbox-group" style="margin-bottom: 1.2rem;">
+          <input type="checkbox" id="edit-link-active">
+          <label for="edit-link-active" style="cursor: pointer; color: #fff;">આ લિંકને Active (સક્રિય) રાખો</label>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 0.75rem;">
+            💾 ફેરફાર સેવ કરો (Update)
+          </button>
+          <button type="button" id="btn-cancel-edit" class="btn btn-outline" style="padding: 0.75rem 1rem;">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Header -->
   <header>
     <div class="brand">
@@ -681,6 +714,7 @@
             <td>
               <div class="actions-cell">
                 ${!isActive ? `<button class="btn btn-success btn-set-active" data-id="${link.id}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Active કરો</button>` : ''}
+                <button class="btn btn-outline btn-edit-link" data-id="${link.id}" data-title="${escapeHtml(link.title)}" data-url="${escapeHtml(link.originalUrl)}" data-active="${isActive}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Edit ✏️</button>
                 <button class="btn btn-outline btn-copy-link" data-url="${window.location.origin}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Copy Link</button>
                 <button class="btn btn-danger btn-delete-link" data-id="${link.id}" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">Remove 🗑️</button>
               </div>
@@ -695,6 +729,22 @@
           btn.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
             setActiveLink(id);
+          });
+        });
+
+        // Edit button click
+        document.querySelectorAll('.btn-edit-link').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const title = this.getAttribute('data-title');
+            const url = this.getAttribute('data-url');
+            const isActive = this.getAttribute('data-active') === 'true';
+
+            document.getElementById('edit-link-id').value = id;
+            document.getElementById('edit-link-title').value = title;
+            document.getElementById('edit-link-url').value = url;
+            document.getElementById('edit-link-active').checked = isActive;
+            document.getElementById('edit-modal').style.display = 'flex';
           });
         });
 
@@ -713,6 +763,50 @@
             navigator.clipboard.writeText(url).then(function() {
               showToast('લિંક કોપી થઈ ગઈ! શૅર કરવા તૈયાર.');
             });
+          });
+        });
+      }
+
+      // Close Edit Modal Handlers
+      const editModal = document.getElementById('edit-modal');
+      const btnCloseEdit = document.getElementById('btn-close-edit');
+      const btnCancelEdit = document.getElementById('btn-cancel-edit');
+      const editLinkForm = document.getElementById('edit-link-form');
+
+      if (btnCloseEdit) btnCloseEdit.addEventListener('click', function() { editModal.style.display = 'none'; });
+      if (btnCancelEdit) btnCancelEdit.addEventListener('click', function() { editModal.style.display = 'none'; });
+
+      // Handle Edit Link Submit
+      if (editLinkForm) {
+        editLinkForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const id = document.getElementById('edit-link-id').value;
+          const title = document.getElementById('edit-link-title').value.trim();
+          const url = document.getElementById('edit-link-url').value.trim();
+          const setActive = document.getElementById('edit-link-active').checked;
+
+          if (!url) return;
+
+          fetch('/api/admin/links/' + id, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-password': adminPassword
+            },
+            body: JSON.stringify({ title, url, setAsActive: setActive })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.success) {
+              editModal.style.display = 'none';
+              showToast('લિંક સફળતાપૂર્વક અપડેટ થઈ ગઈ!');
+              loadDashboard();
+            } else {
+              alert(data.message || 'Error updating link');
+            }
+          })
+          .catch(function() {
+            alert('સર્વર એરર!');
           });
         });
       }

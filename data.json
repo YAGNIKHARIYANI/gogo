@@ -6,18 +6,18 @@
     "redirectDelayMs": 1500,
     "adminPassword": "admin123"
   },
-  "activeLinkId": "link_1790855828409",
+  "activeLinkId": "link_nita_current",
   "links": [
     {
-      "id": "link_1790855828409",
-      "title": "YouTube Video",
-      "originalUrl": "https://youtu.be/XByUCUkK_eo?si=aGq6YU5EjAS7Z7gd",
-      "videoId": "XByUCUkK_eo",
+      "id": "link_nita_current",
+      "title": "નીતા નો વિડીયો",
+      "originalUrl": "https://youtu.be/67knw-lQVG4?si=dthzH6IgibvPCygL",
+      "videoId": "67knw-lQVG4",
       "playlistId": null,
       "isShorts": false,
-      "thumbnailUrl": "https://img.youtube.com/vi/XByUCUkK_eo/hqdefault.jpg",
+      "thumbnailUrl": "https://img.youtube.com/vi/67knw-lQVG4/hqdefault.jpg",
       "clicks": 0,
-      "createdAt": "2026-10-01T11:57:08.409Z"
+      "createdAt": "2026-10-01T12:12:00.000Z"
     }
   ]
 }
