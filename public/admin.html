@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Vadodara:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
@@ -378,6 +379,139 @@
         margin-top: 0.6rem;
       }
     }
+
+    /* Analytics & Graph Section */
+    .analytics-card {
+      padding: 1.6rem;
+      margin-bottom: 2rem;
+    }
+
+    .analytics-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .analytics-title-group h2 {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .analytics-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    .time-range-toggle {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .toggle-btn:hover {
+      color: #fff;
+    }
+
+    .toggle-btn.active {
+      background: var(--yt-red);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(255, 0, 51, 0.45);
+    }
+
+    .analytics-badges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .insight-badge {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .insight-badge.peak-badge {
+      background: rgba(255, 0, 51, 0.08);
+      border-color: rgba(255, 0, 51, 0.35);
+    }
+
+    .insight-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .insight-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .peak-badge .insight-value {
+      color: #ff4d6d;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 0.5rem;
+    }
+
+    @media (max-width: 650px) {
+      .analytics-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .time-range-toggle {
+        width: 100%;
+      }
+      .toggle-btn {
+        flex: 1;
+        justify-content: center;
+      }
+      .chart-wrapper {
+        height: 250px;
+        padding: 0.35rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -468,6 +602,46 @@
       <div class="stat-card">
         <span class="stat-label">સક્રિય વિડીયો (Active Video)</span>
         <span class="stat-val" style="font-size: 1.1rem; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="stat-active-title">None</span>
+      </div>
+    </div>
+
+    <!-- Section: Clicks Analytics Graph (24h / 48h Toggle with 1h intervals) -->
+    <div class="section-card analytics-card">
+      <div class="analytics-header">
+        <div class="analytics-title-group">
+          <h2>
+            <span>📈 ક્લિક્સ એનાલિટિક્સ ગ્રાફ (Clicks Analytics)</span>
+          </h2>
+          <span class="analytics-subtitle" id="analytics-time-label">છેલ્લા 48 કલાકની વિગત (1-1 કલાકના અંતરે)</span>
+        </div>
+        
+        <div class="analytics-controls">
+          <div class="time-range-toggle">
+            <button type="button" class="toggle-btn" id="btn-toggle-24h" data-range="24">⏱️ 24 કલાક (24h)</button>
+            <button type="button" class="toggle-btn active" id="btn-toggle-48h" data-range="48">⏱️ 48 કલાક (48h)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Insights Badges -->
+      <div class="analytics-badges">
+        <div class="insight-badge">
+          <span class="insight-label">કુલ ક્લિક્સ (આ સમયમાં)</span>
+          <strong class="insight-value" id="insight-period-clicks">0</strong>
+        </div>
+        <div class="insight-badge peak-badge">
+          <span class="insight-label">🔥 સૌથી વધુ ક્લિક્સ (Peak Hour)</span>
+          <strong class="insight-value" id="insight-peak-info">-</strong>
+        </div>
+        <div class="insight-badge">
+          <span class="insight-label">સરેરાશ / કલાક (Average)</span>
+          <strong class="insight-value" id="insight-avg-clicks">0</strong>
+        </div>
+      </div>
+
+      <!-- Responsive Chart Canvas -->
+      <div class="chart-wrapper">
+        <canvas id="clicksChart"></canvas>
       </div>
     </div>
 
@@ -587,6 +761,18 @@
       const settingAutoRedirect = document.getElementById('setting-auto-redirect');
       const settingPassword = document.getElementById('setting-password');
 
+      // Analytics Chart Elements & State
+      const btnToggle24h = document.getElementById('btn-toggle-24h');
+      const btnToggle48h = document.getElementById('btn-toggle-48h');
+      const analyticsSubtitle = document.getElementById('analytics-time-label');
+      const insightPeriodClicks = document.getElementById('insight-period-clicks');
+      const insightPeakInfo = document.getElementById('insight-peak-info');
+      const insightAvgClicks = document.getElementById('insight-avg-clicks');
+
+      let currentHoursRange = 48; // default 48h as requested
+      let cachedHourlyClicks = {};
+      let clicksChart = null;
+
       function showToast(msg) {
         const toast = document.getElementById('toast-msg');
         toast.textContent = msg;
@@ -671,6 +857,10 @@
 
           // Render Links Table
           renderLinksTable(data.links, data.activeLinkId);
+
+          // Render Analytics Chart (24h / 48h)
+          cachedHourlyClicks = data.hourlyClicks || {};
+          renderClicksChart(cachedHourlyClicks, currentHoursRange);
         })
         .catch(function(err) {
           console.error(err);
@@ -911,6 +1101,250 @@
             alert(data.message || 'સેવ કરવામાં ભૂલ!');
           }
         });
+      });
+
+      // Helper: Format bucket key ('YYYY-MM-DD-HH') matching server
+      function getBucketKey(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        return `${y}-${m}-${day}-${h}`;
+      }
+
+      function formatHourDisplay(date) {
+        let hours = date.getHours();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        return `${hours} ${ampm}`;
+      }
+
+      function formatFullDateHour(date) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = date.getDate();
+        const mon = months[date.getMonth()];
+        let hours = date.getHours();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const h12 = hours % 12 || 12;
+        return `${day} ${mon}, ${h12}:00 ${ampm}`;
+      }
+
+      // Render Clicks Chart (24h or 48h with 1h intervals)
+      function renderClicksChart(hourlyData, hoursRange) {
+        const canvas = document.getElementById('clicksChart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        hourlyData = hourlyData || {};
+        const range = hoursRange || currentHoursRange || 48;
+
+        const now = new Date();
+        const currentHourDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 0, 0, 0);
+
+        const labels = [];
+        const fullTooltips = [];
+        const dataPoints = [];
+
+        let totalPeriodClicks = 0;
+        let peakValue = 0;
+        let peakIndices = [];
+
+        for (let i = range - 1; i >= 0; i--) {
+          const slotTime = new Date(currentHourDate.getTime() - i * 3600 * 1000);
+          const key = getBucketKey(slotTime);
+          const count = Number(hourlyData[key]) || 0;
+
+          labels.push(formatHourDisplay(slotTime));
+          fullTooltips.push(formatFullDateHour(slotTime));
+          dataPoints.push(count);
+
+          totalPeriodClicks += count;
+          if (count > peakValue) {
+            peakValue = count;
+          }
+        }
+
+        if (peakValue > 0) {
+          dataPoints.forEach(function(val, idx) {
+            if (val === peakValue) {
+              peakIndices.push(idx);
+            }
+          });
+        }
+
+        // Update Insight Badges
+        if (insightPeriodClicks) insightPeriodClicks.textContent = totalPeriodClicks;
+        const avg = (totalPeriodClicks / range).toFixed(1);
+        if (insightAvgClicks) insightAvgClicks.textContent = avg;
+
+        if (insightPeakInfo) {
+          if (peakValue > 0 && peakIndices.length > 0) {
+            const firstPeakTime = fullTooltips[peakIndices[0]];
+            insightPeakInfo.textContent = `${peakValue} clicks (${firstPeakTime})`;
+          } else {
+            insightPeakInfo.textContent = '0 clicks';
+          }
+        }
+
+        if (analyticsSubtitle) {
+          analyticsSubtitle.textContent = `છેલ્લા ${range} કલાકની વિગત (1-1 કલાકના અંતરે)`;
+        }
+
+        // Area Gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(255, 0, 51, 0.42)');
+        gradient.addColorStop(0.7, 'rgba(255, 0, 51, 0.08)');
+        gradient.addColorStop(1, 'rgba(255, 0, 51, 0.00)');
+
+        // Peak point highlights
+        const pointRadii = dataPoints.map(function(val) { return (val === peakValue && peakValue > 0) ? 6 : 2.5; });
+        const pointHoverRadii = dataPoints.map(function(val) { return (val === peakValue && peakValue > 0) ? 8 : 5; });
+        const pointBgColors = dataPoints.map(function(val) { return (val === peakValue && peakValue > 0) ? '#ff0033' : '#ff4d6d'; });
+        const pointBorderColors = dataPoints.map(function(val) { return (val === peakValue && peakValue > 0) ? '#ffffff' : '#ff0033'; });
+        const pointBorderWidths = dataPoints.map(function(val) { return (val === peakValue && peakValue > 0) ? 2.5 : 1; });
+
+        if (clicksChart) {
+          clicksChart.data.labels = labels;
+          clicksChart.data.datasets[0].data = dataPoints;
+          clicksChart.data.datasets[0].pointRadius = pointRadii;
+          clicksChart.data.datasets[0].pointHoverRadius = pointHoverRadii;
+          clicksChart.data.datasets[0].pointBackgroundColor = pointBgColors;
+          clicksChart.data.datasets[0].pointBorderColor = pointBorderColors;
+          clicksChart.data.datasets[0].pointBorderWidth = pointBorderWidths;
+          clicksChart.data.datasets[0].backgroundColor = gradient;
+          clicksChart.options.scales.x.ticks.maxTicksLimit = window.innerWidth < 650 ? 6 : 14;
+          clicksChart.options.scales.y.suggestedMax = Math.max(peakValue + 2, 5);
+          clicksChart.options.plugins.tooltip.callbacks.title = function(tooltipItems) {
+            const index = tooltipItems[0].dataIndex;
+            return fullTooltips[index] || labels[index];
+          };
+          clicksChart.options.plugins.tooltip.callbacks.label = function(context) {
+            const val = context.raw || 0;
+            const isPeak = val === peakValue && peakValue > 0;
+            return ` ક્લીક્સ: ${val}${isPeak ? ' 🔥 (સૌથી વધુ પીક સમય)' : ''}`;
+          };
+          clicksChart.update();
+        } else {
+          clicksChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'કલાક દીઠ ક્લિક્સ (Clicks/hr)',
+                data: dataPoints,
+                borderColor: '#ff0033',
+                borderWidth: 2.5,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.35,
+                pointRadius: pointRadii,
+                pointHoverRadius: pointHoverRadii,
+                pointBackgroundColor: pointBgColors,
+                pointBorderColor: pointBorderColors,
+                pointBorderWidth: pointBorderWidths
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: {
+                duration: 600,
+                easing: 'easeOutQuart'
+              },
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                  titleColor: '#f8fafc',
+                  bodyColor: '#38bdf8',
+                  borderColor: 'rgba(255, 255, 255, 0.12)',
+                  borderWidth: 1,
+                  padding: 10,
+                  cornerRadius: 8,
+                  titleFont: { size: 12, weight: '600', family: 'Inter, sans-serif' },
+                  bodyFont: { size: 13, weight: 'bold', family: 'Inter, sans-serif' },
+                  callbacks: {
+                    title: function(tooltipItems) {
+                      const index = tooltipItems[0].dataIndex;
+                      return fullTooltips[index] || labels[index];
+                    },
+                    label: function(context) {
+                      const val = context.raw || 0;
+                      const isPeak = val === peakValue && peakValue > 0;
+                      return ` ક્લીક્સ: ${val}${isPeak ? ' 🔥 (સૌથી વધુ પીક સમય)' : ''}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: {
+                    color: 'rgba(255, 255, 255, 0.04)',
+                    tickColor: 'transparent'
+                  },
+                  ticks: {
+                    color: '#94a3b8',
+                    font: { size: 11 },
+                    maxTicksLimit: window.innerWidth < 650 ? 6 : 14,
+                    maxRotation: 0,
+                    autoSkip: true
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  suggestedMax: Math.max(peakValue + 2, 5),
+                  grid: {
+                    color: 'rgba(255, 255, 255, 0.05)'
+                  },
+                  ticks: {
+                    color: '#94a3b8',
+                    font: { size: 11 },
+                    precision: 0,
+                    stepSize: peakValue > 20 ? undefined : 1
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Range Toggle Handlers (24h / 48h)
+      if (btnToggle24h && btnToggle48h) {
+        btnToggle24h.addEventListener('click', function() {
+          if (currentHoursRange === 24) return;
+          currentHoursRange = 24;
+          btnToggle24h.classList.add('active');
+          btnToggle48h.classList.remove('active');
+          renderClicksChart(cachedHourlyClicks, currentHoursRange);
+        });
+
+        btnToggle48h.addEventListener('click', function() {
+          if (currentHoursRange === 48) return;
+          currentHoursRange = 48;
+          btnToggle48h.classList.add('active');
+          btnToggle24h.classList.remove('active');
+          renderClicksChart(cachedHourlyClicks, currentHoursRange);
+        });
+      }
+
+      // Responsive Chart resize on window resize
+      window.addEventListener('resize', function() {
+        if (clicksChart) {
+          const maxTicks = window.innerWidth < 650 ? 6 : 14;
+          if (clicksChart.options.scales.x.ticks.maxTicksLimit !== maxTicks) {
+            clicksChart.options.scales.x.ticks.maxTicksLimit = maxTicks;
+          }
+          clicksChart.resize();
+        }
       });
 
       function escapeHtml(str) {
