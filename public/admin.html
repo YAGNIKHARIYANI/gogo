@@ -539,18 +539,18 @@
   <div class="login-overlay" id="edit-modal" style="display: none;">
     <div class="login-card" style="max-width: 440px; text-align: left;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
-        <h2 style="font-size: 1.25rem;">✏️ વિડીયો લિંક Edit કરો</h2>
+        <h2 style="font-size: 1.25rem;">✏️ લિંક Edit કરો (Edit Link)</h2>
         <button id="btn-close-edit" style="background: none; border: none; color: #94a3b8; font-size: 1.4rem; cursor: pointer;">✕</button>
       </div>
       <form id="edit-link-form">
         <input type="hidden" id="edit-link-id">
         <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="edit-link-title">વિડીયો ટાઇટલ</label>
+          <label for="edit-link-title">લિંક ટાઇટલ (Title)</label>
           <input type="text" id="edit-link-title" required>
         </div>
         <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="edit-link-url">YouTube URL</label>
-          <input type="url" id="edit-link-url" required>
+          <label for="edit-link-url">લિંક URL (Any Link / Website / Video)</label>
+          <input type="url" id="edit-link-url" placeholder="https://..." required>
         </div>
         <div class="checkbox-group" style="margin-bottom: 1.2rem;">
           <input type="checkbox" id="edit-link-active">
@@ -574,7 +574,7 @@
       <svg viewBox="0 0 24 24">
         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
       </svg>
-      <span>Deep Linker Admin Panel</span>
+      <span>Smart Linker Admin Panel</span>
     </div>
     <div class="nav-actions">
       <a href="/" target="_blank" class="btn btn-outline" title="Live User Page">
@@ -600,7 +600,7 @@
         <span class="stat-val" id="stat-total-links">0</span>
       </div>
       <div class="stat-card">
-        <span class="stat-label">સક્રિય વિડીયો (Active Video)</span>
+        <span class="stat-label">સક્રિય લિંક (Active Link)</span>
         <span class="stat-val" style="font-size: 1.1rem; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" id="stat-active-title">None</span>
       </div>
     </div>
@@ -648,17 +648,17 @@
     <!-- Section 1: Add New Video Link -->
     <div class="section-card">
       <h2 class="section-title">
-        <span>➕ નવી વિડીયો લિંક ઉમેરો (Add New Link)</span>
+        <span>➕ નવી લિંક ઉમેરો (Add Any Link)</span>
       </h2>
       <form id="add-link-form">
         <div class="form-grid">
           <div class="form-group">
-            <label for="new-url">YouTube Video / Shorts / Playlist URL *</label>
-            <input type="url" id="new-url" placeholder="e.g. https://youtu.be/dQw4w9WgXcQ or https://www.youtube.com/watch?v=..." required>
+            <label for="new-url">લિંક URL (Any Website, YouTube, Instagram, etc.) *</label>
+            <input type="url" id="new-url" placeholder="e.g. https://youtu.be/..., https://instagram.com/..., https://example.com" required>
           </div>
           <div class="form-group">
-            <label for="new-title">વિડીયો ટાઇટલ / નામ (Optional Title)</label>
-            <input type="text" id="new-title" placeholder="e.g. નીતા નો નવો વિડીયો">
+            <label for="new-title">લિંક ટાઇટલ / નામ (Optional Title)</label>
+            <input type="text" id="new-title" placeholder="e.g. નીતા નો નવો વિડીયો / વેબસાઇટ લિંક">
           </div>
           <div class="checkbox-group">
             <input type="checkbox" id="set-active-check" checked>
@@ -881,12 +881,23 @@
           const tr = document.createElement('tr');
           tr.className = 'link-row';
 
-          const thumbSrc = link.thumbnailUrl || ('https://img.youtube.com/vi/' + (link.videoId || '') + '/hqdefault.jpg');
+          let thumbSrc = link.thumbnailUrl;
+          if (!thumbSrc && link.videoId) {
+            thumbSrc = 'https://img.youtube.com/vi/' + link.videoId + '/hqdefault.jpg';
+          }
+          if (!thumbSrc) {
+            try {
+              const u = new URL(link.originalUrl);
+              thumbSrc = 'https://www.google.com/s2/favicons?domain=' + u.hostname + '&sz=128';
+            } catch(e) {
+              thumbSrc = '';
+            }
+          }
 
           tr.innerHTML = `
             <td>
-              <div class="thumb-cell">
-                <img src="${thumbSrc}" alt="thumb">
+              <div class="thumb-cell" style="display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04);">
+                <img src="${thumbSrc}" alt="thumb" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'%23ff0033\\'><path d=\\'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z\\'/></svg>';">
               </div>
             </td>
             <td>

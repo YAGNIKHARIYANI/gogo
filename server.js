@@ -120,6 +120,16 @@ async function saveAllData(data) {
   return true;
 }
 
+// Helper: Normalize URL string (add https:// if protocol missing)
+function normalizeUrl(urlStr) {
+  if (!urlStr) return '';
+  let str = urlStr.trim();
+  if (!/^https?:\/\//i.test(str)) {
+    str = 'https://' + str;
+  }
+  return str;
+}
+
 // Helper: Extract YouTube ID & info from any YouTube URL
 function parseYouTubeUrl(urlStr) {
   if (!urlStr) return null;
@@ -148,32 +158,143 @@ function parseYouTubeUrl(urlStr) {
   };
 }
 
-// Helper: Generate deep links (Android Intent, iOS scheme, Web fallback)
-function generateDeepLinks(parsed, originalUrl) {
-  const { videoId, playlistId, isShorts } = parsed;
-
-  let webUrl = originalUrl || 'https://www.youtube.com/';
-  let androidIntent = '';
-  let iosScheme = '';
-
-  if (videoId) {
-    const path = isShorts ? `shorts/${videoId}` : `watch?v=${videoId}${playlistId ? `&list=${playlistId}` : ''}`;
-    androidIntent = `intent://www.youtube.com/${path}#Intent;package=com.google.android.youtube;scheme=https;end`;
-    iosScheme = isShorts ? `youtube://www.youtube.com/shorts/${videoId}` : `youtube://watch?v=${videoId}`;
-    webUrl = isShorts ? `https://www.youtube.com/shorts/${videoId}` : `https://www.youtube.com/watch?v=${videoId}`;
-  } else if (playlistId) {
-    androidIntent = `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;end`;
-    iosScheme = `youtube://www.youtube.com/playlist?list=${playlistId}`;
-    webUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
-  } else {
-    androidIntent = `intent://www.youtube.com/#Intent;package=com.google.android.youtube;scheme=https;end`;
-    iosScheme = `youtube://`;
+// Helper: Parse any link (YouTube, Instagram, Telegram, WhatsApp, or any website)
+function parseAnyUrl(urlStr) {
+  if (!urlStr) return null;
+  const normalized = normalizeUrl(urlStr);
+  
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(normalized);
+  } catch (e) {
+    return null;
   }
 
+  // 1. Check if it's a YouTube URL
+  const ytParsed = parseYouTubeUrl(normalized);
+  if (ytParsed && (ytParsed.videoId || ytParsed.playlistId)) {
+    return {
+      type: 'youtube',
+      url: normalized,
+      videoId: ytParsed.videoId,
+      playlistId: ytParsed.playlistId,
+      isShorts: ytParsed.isShorts,
+      thumbnailUrl: ytParsed.thumbnailUrl || (ytParsed.videoId ? `https://img.youtube.com/vi/${ytParsed.videoId}/hqdefault.jpg` : ''),
+      hostname: parsedUrl.hostname
+    };
+  }
+
+  // 2. Check if Instagram
+  if (/instagram\.com/i.test(parsedUrl.hostname)) {
+    return {
+      type: 'instagram',
+      url: normalized,
+      videoId: null,
+      playlistId: null,
+      isShorts: false,
+      thumbnailUrl: `https://www.google.com/s2/favicons?domain=instagram.com&sz=128`,
+      hostname: parsedUrl.hostname
+    };
+  }
+
+  // 3. Check if Telegram
+  if (/t\.me|telegram\.me|telegram\.org/i.test(parsedUrl.hostname)) {
+    return {
+      type: 'telegram',
+      url: normalized,
+      videoId: null,
+      playlistId: null,
+      isShorts: false,
+      thumbnailUrl: `https://www.google.com/s2/favicons?domain=telegram.org&sz=128`,
+      hostname: parsedUrl.hostname
+    };
+  }
+
+  // 4. Check if WhatsApp
+  if (/wa\.me|whatsapp\.com/i.test(parsedUrl.hostname)) {
+    return {
+      type: 'whatsapp',
+      url: normalized,
+      videoId: null,
+      playlistId: null,
+      isShorts: false,
+      thumbnailUrl: `https://www.google.com/s2/favicons?domain=whatsapp.com&sz=128`,
+      hostname: parsedUrl.hostname
+    };
+  }
+
+  // 5. Any other website / link
   return {
-    webUrl,
-    androidIntent,
-    iosScheme
+    type: 'web',
+    url: normalized,
+    videoId: null,
+    playlistId: null,
+    isShorts: false,
+    thumbnailUrl: `https://www.google.com/s2/favicons?domain=${parsedUrl.hostname}&sz=128`,
+    hostname: parsedUrl.hostname
+  };
+}
+
+// Helper: Generate deep links (Android Intent, iOS scheme, Web fallback)
+function generateDeepLinks(parsed, originalUrl) {
+  const normUrl = normalizeUrl(originalUrl);
+
+  if (parsed && parsed.videoId) {
+    const { videoId, playlistId, isShorts } = parsed;
+    const path = isShorts ? `shorts/${videoId}` : `watch?v=${videoId}${playlistId ? `&list=${playlistId}` : ''}`;
+    const androidIntent = `intent://www.youtube.com/${path}#Intent;package=com.google.android.youtube;scheme=https;end`;
+    const iosScheme = isShorts ? `youtube://www.youtube.com/shorts/${videoId}` : `youtube://watch?v=${videoId}`;
+    const webUrl = isShorts ? `https://www.youtube.com/shorts/${videoId}` : `https://www.youtube.com/watch?v=${videoId}`;
+    return {
+      type: 'youtube',
+      webUrl,
+      androidIntent,
+      iosScheme
+    };
+  } else if (parsed && parsed.playlistId) {
+    const { playlistId } = parsed;
+    return {
+      type: 'youtube',
+      webUrl: `https://www.youtube.com/playlist?list=${playlistId}`,
+      androidIntent: `intent://www.youtube.com/playlist?list=${playlistId}#Intent;package=com.google.android.youtube;scheme=https;end`,
+      iosScheme: `youtube://www.youtube.com/playlist?list=${playlistId}`
+    };
+  }
+
+  // Instagram deep link
+  if (parsed && (parsed.type === 'instagram' || /instagram\.com/i.test(normUrl))) {
+    try {
+      const u = new URL(normUrl);
+      const cleanPath = u.pathname.replace(/^\//, '');
+      return {
+        type: 'instagram',
+        webUrl: normUrl,
+        androidIntent: `intent://${u.host}/${cleanPath}#Intent;package=com.instagram.android;scheme=https;end`,
+        iosScheme: `instagram://`
+      };
+    } catch (e) {}
+  }
+
+  // Telegram deep link
+  if (parsed && (parsed.type === 'telegram' || /t\.me/i.test(normUrl))) {
+    try {
+      const u = new URL(normUrl);
+      const cleanPath = u.pathname.replace(/^\//, '');
+      return {
+        type: 'telegram',
+        webUrl: normUrl,
+        androidIntent: `intent://${u.host}/${cleanPath}#Intent;package=org.telegram.messenger;scheme=https;end`,
+        iosScheme: `tg://resolve?domain=${cleanPath}`
+      };
+    } catch (e) {}
+  }
+
+  // Standard website / any other link
+  return {
+    type: (parsed && parsed.type) || 'web',
+    webUrl: normUrl,
+    androidIntent: normUrl,
+    iosScheme: normUrl
   };
 }
 
@@ -188,11 +309,7 @@ app.get('/api/config', async (req, res) => {
 
   let deepLinks = null;
   if (activeLink) {
-    const parsed = {
-      videoId: activeLink.videoId,
-      playlistId: activeLink.playlistId,
-      isShorts: activeLink.isShorts
-    };
+    const parsed = parseAnyUrl(activeLink.originalUrl);
     deepLinks = generateDeepLinks(parsed, activeLink.originalUrl);
   }
 
@@ -209,6 +326,7 @@ app.get('/api/config', async (req, res) => {
       title: activeLink.title,
       originalUrl: activeLink.originalUrl,
       thumbnailUrl: activeLink.thumbnailUrl,
+      linkType: activeLink.linkType || (activeLink.videoId ? 'youtube' : 'web'),
       videoId: activeLink.videoId,
       clicks: activeLink.clicks,
       deepLinks
@@ -348,28 +466,46 @@ app.get('/api/admin/data', checkAdminAuth, async (req, res) => {
   });
 });
 
-// Add a new link
+// Add a new link (Supports YouTube, Instagram, Telegram, WhatsApp, or ANY website URL)
 app.post('/api/admin/links', checkAdminAuth, async (req, res) => {
   const { url, title, setAsActive } = req.body;
-  if (!url) {
-    return res.status(400).json({ success: false, message: 'URL is required' });
+  if (!url || !url.trim()) {
+    return res.status(400).json({ success: false, message: 'URL દાખલ કરો (URL is required)' });
   }
 
-  const parsed = parseYouTubeUrl(url);
-  if (!parsed || (!parsed.videoId && !parsed.playlistId)) {
-    return res.status(400).json({ success: false, message: 'માન્ય YouTube લિંક દાખલ કરો (Invalid YouTube URL)' });
+  const parsed = parseAnyUrl(url);
+  if (!parsed || !parsed.url) {
+    return res.status(400).json({ success: false, message: 'માન્ય URL દાખલ કરો (Please enter a valid URL)' });
   }
 
   const data = await getOrFetchData();
   const newId = 'link_' + Date.now();
+  
+  // Generate friendly default title if none provided
+  let linkTitle = title && title.trim() ? title.trim() : '';
+  if (!linkTitle) {
+    if (parsed.type === 'youtube') {
+      linkTitle = parsed.isShorts ? 'YouTube Shorts Video' : 'YouTube Video';
+    } else if (parsed.type === 'instagram') {
+      linkTitle = 'Instagram Link';
+    } else if (parsed.type === 'telegram') {
+      linkTitle = 'Telegram Channel';
+    } else if (parsed.type === 'whatsapp') {
+      linkTitle = 'WhatsApp Link';
+    } else {
+      linkTitle = parsed.hostname.replace(/^www\./i, '') + ' Link';
+    }
+  }
+
   const newLink = {
     id: newId,
-    title: title && title.trim() ? title.trim() : (parsed.isShorts ? 'YouTube Short Video' : 'YouTube Video'),
-    originalUrl: url.trim(),
-    videoId: parsed.videoId,
-    playlistId: parsed.playlistId,
-    isShorts: parsed.isShorts,
-    thumbnailUrl: parsed.thumbnailUrl || 'https://img.youtube.com/vi/67knw-lQVG4/hqdefault.jpg',
+    title: linkTitle,
+    originalUrl: parsed.url,
+    linkType: parsed.type,
+    videoId: parsed.videoId || null,
+    playlistId: parsed.playlistId || null,
+    isShorts: Boolean(parsed.isShorts),
+    thumbnailUrl: parsed.thumbnailUrl || '',
     clicks: 0,
     createdAt: new Date().toISOString()
   };
@@ -396,19 +532,20 @@ app.put('/api/admin/links/:id', checkAdminAuth, async (req, res) => {
     return res.status(404).json({ success: false, message: 'Link not found' });
   }
 
-  if (url) {
-    const parsed = parseYouTubeUrl(url);
-    if (!parsed || (!parsed.videoId && !parsed.playlistId)) {
-      return res.status(400).json({ success: false, message: 'Invalid YouTube URL' });
+  if (url && url.trim()) {
+    const parsed = parseAnyUrl(url);
+    if (!parsed || !parsed.url) {
+      return res.status(400).json({ success: false, message: 'માન્ય URL દાખલ કરો (Invalid URL)' });
     }
-    link.originalUrl = url.trim();
-    link.videoId = parsed.videoId;
-    link.playlistId = parsed.playlistId;
-    link.isShorts = parsed.isShorts;
-    if (parsed.thumbnailUrl) link.thumbnailUrl = parsed.thumbnailUrl;
+    link.originalUrl = parsed.url;
+    link.linkType = parsed.type;
+    link.videoId = parsed.videoId || null;
+    link.playlistId = parsed.playlistId || null;
+    link.isShorts = Boolean(parsed.isShorts);
+    link.thumbnailUrl = parsed.thumbnailUrl || link.thumbnailUrl || '';
   }
 
-  if (title !== undefined) {
+  if (title !== undefined && title.trim()) {
     link.title = title.trim();
   }
 

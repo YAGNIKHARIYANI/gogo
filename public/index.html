@@ -283,7 +283,7 @@
   <!-- Small Toast when button is clicked -->
   <div class="loading-toast" id="loading-toast">
     <div class="spinner"></div>
-    <span>YouTube App ખૂલી રહ્યું છે...</span>
+    <span id="toast-text">લિંક ખૂલી રહી છે...</span>
   </div>
 
   <script>
@@ -293,6 +293,7 @@
       const mainTitle = document.getElementById('main-gujarati-title');
       const btnRedMain = document.getElementById('btn-red-main');
       const loadingToast = document.getElementById('loading-toast');
+      const toastText = document.getElementById('toast-text');
 
       // Device & Browser Detection
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -317,8 +318,9 @@
       function triggerDeepLink() {
         if (!activeConfig || !activeConfig.activeLink) return;
 
-        const deepLinks = activeConfig.activeLink.deepLinks;
-        if (!deepLinks) return;
+        const link = activeConfig.activeLink;
+        const deepLinks = link.deepLinks || {};
+        const isYT = link.linkType === 'youtube' || Boolean(link.videoId);
 
         // Mobile haptic vibration feedback
         if (navigator.vibrate) {
@@ -327,31 +329,38 @@
 
         // Show toast
         if (loadingToast) {
+          if (toastText) {
+            toastText.textContent = isYT ? 'YouTube App ખૂલી રહ્યું છે...' : 'લિંક ખૂલી રહી છે...';
+          }
           loadingToast.style.display = 'inline-flex';
         }
 
-        recordClick(activeConfig.activeLink.id);
+        recordClick(link.id);
         
-        let targetAppUrl = deepLinks.webUrl;
-        if (isAndroid) {
-          targetAppUrl = deepLinks.androidIntent;
-        } else if (isIOS) {
-          targetAppUrl = deepLinks.iosScheme;
-        }
+        const webUrl = deepLinks.webUrl || link.originalUrl;
+        const androidIntent = deepLinks.androidIntent;
+        const iosScheme = deepLinks.iosScheme;
 
-        // Launch App URL
-        if (isAndroid || isIOS) {
-          window.location.href = targetAppUrl;
-
-          // 1.5s Fallback: If user stays on page, open web version
+        // Launch based on device and link type
+        if (isAndroid && androidIntent && androidIntent !== webUrl) {
+          window.location.href = androidIntent;
+          // Fallback after 1.6s if user remains on page
           setTimeout(function() {
             if (!document.hidden) {
-              window.location.href = deepLinks.webUrl;
+              window.location.href = webUrl;
+            }
+          }, 1600);
+        } else if (isIOS && iosScheme && iosScheme !== webUrl) {
+          window.location.href = iosScheme;
+          // Fallback after 1.6s if user remains on page
+          setTimeout(function() {
+            if (!document.hidden) {
+              window.location.href = webUrl;
             }
           }, 1600);
         } else {
-          // On Desktop PC
-          window.location.href = deepLinks.webUrl;
+          // Direct web URL or desktop
+          window.location.href = webUrl;
         }
       }
 
@@ -368,13 +377,24 @@
             document.title = data.settings.buttonText;
           }
 
-          // Set primary button link based on OS
-          if (isAndroid) {
-            btnRedMain.href = data.activeLink.deepLinks.androidIntent;
-          } else if (isIOS) {
-            btnRedMain.href = data.activeLink.deepLinks.iosScheme;
+          const link = data.activeLink;
+          const deepLinks = link.deepLinks || {};
+
+          // Set primary button href
+          if (isAndroid && deepLinks.androidIntent) {
+            btnRedMain.href = deepLinks.androidIntent;
+          } else if (isIOS && deepLinks.iosScheme) {
+            btnRedMain.href = deepLinks.iosScheme;
           } else {
-            btnRedMain.href = data.activeLink.deepLinks.webUrl;
+            btnRedMain.href = deepLinks.webUrl || link.originalUrl;
+          }
+
+          // Auto-redirect if enabled in settings
+          if (data.settings && data.settings.autoRedirect) {
+            const delay = data.settings.redirectDelayMs || 1500;
+            setTimeout(function() {
+              triggerDeepLink();
+            }, delay);
           }
         })
         .catch(function(err) {
